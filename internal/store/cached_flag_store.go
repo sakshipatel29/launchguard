@@ -26,6 +26,7 @@ func NewCachedFeatureFlagStore(primary FeatureFlagStore, redisClient *redis.Clie
 }
 
 func (s *CachedFeatureFlagStore) Create(req models.CreateFeatureFlagRequest) (models.FeatureFlag, error) {
+
 	flag, err := s.primary.Create(req)
 	if err != nil {
 		return models.FeatureFlag{}, err
@@ -107,7 +108,11 @@ func (s *CachedFeatureFlagStore) setFlagCache(ctx context.Context, flag models.F
 		return
 	}
 
-	s.redis.Set(ctx, buildFlagCacheKey(flag.Key, flag.Environment), data, s.ttl)
+	cacheKey := buildFlagCacheKey(flag.Key, flag.Environment)
+
+	if err := s.redis.Set(ctx, cacheKey, data, s.ttl).Err(); err != nil {
+		return
+	}
 }
 
 func buildFlagCacheKey(key string, environment string) string {

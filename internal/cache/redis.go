@@ -11,7 +11,7 @@ func ConnectRedis(ctx context.Context) (*redis.Client, error) {
 	redisAddr := os.Getenv("REDIS_ADDR")
 
 	if redisAddr == "" {
-		redisAddr = "localhost:6379"
+		redisAddr = "localhost:6380"
 	}
 
 	client := redis.NewClient(&redis.Options{
