@@ -17,5 +17,11 @@ services:
     ports:
       - "6380:6379"
 
+  kafka:
+    image: apache/kafka:latest
+    container_name: launchguard-kafka
+    ports:
+      - "9092:9092"
+
 volumes:
   postgres_data:

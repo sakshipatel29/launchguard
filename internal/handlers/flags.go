@@ -3,22 +3,27 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/sakshipatel29/launchguard/internal/evaluator"
+	"github.com/sakshipatel29/launchguard/internal/events"
 	"github.com/sakshipatel29/launchguard/internal/models"
 	"github.com/sakshipatel29/launchguard/internal/store"
 )
 
 type FeatureFlagHandler struct {
-	store store.FeatureFlagStore
+	store          store.FeatureFlagStore
+	eventPublisher events.Publisher
 }
 
-func NewFeatureFlagHandler(flagStore store.FeatureFlagStore) *FeatureFlagHandler {
+func NewFeatureFlagHandler(flagStore store.FeatureFlagStore, eventPublisher events.Publisher) *FeatureFlagHandler {
 	return &FeatureFlagHandler{
-		store: flagStore,
+		store:          flagStore,
+		eventPublisher: eventPublisher,
 	}
 }
 
@@ -168,6 +173,24 @@ func (h *FeatureFlagHandler) EvaluateFlag(w http.ResponseWriter, r *http.Request
 		RolloutPercentage: flag.RolloutPercentage,
 		Bucket:            result.Bucket,
 		Reason:            result.Reason,
+	}
+
+	event := events.EvaluationEvent{
+		EventType:         "flag_evaluated",
+		FlagKey:           flag.Key,
+		UserID:            req.UserID,
+		Environment:       flag.Environment,
+		Enabled:           result.Enabled,
+		RolloutPercentage: flag.RolloutPercentage,
+		Bucket:            result.Bucket,
+		Reason:            result.Reason,
+		Timestamp:         time.Now().UTC(),
+	}
+
+	if h.eventPublisher != nil {
+		if err := h.eventPublisher.PublishEvaluationEvent(r.Context(), event); err != nil {
+			log.Println("failed to publish evaluation event:", err)
+		}
 	}
 
 	writeJSON(w, http.StatusOK, response)

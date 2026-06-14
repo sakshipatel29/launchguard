@@ -4,12 +4,15 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/sakshipatel29/launchguard/internal/cache"
 	"github.com/sakshipatel29/launchguard/internal/db"
+	"github.com/sakshipatel29/launchguard/internal/events"
 	"github.com/sakshipatel29/launchguard/internal/handlers"
 	"github.com/sakshipatel29/launchguard/internal/store"
 )
@@ -33,11 +36,22 @@ func main() {
 	}
 	defer redisClient.Close()
 
+	kafkaBrokers := os.Getenv("KAFKA_BROKERS")
+	if kafkaBrokers == "" {
+		kafkaBrokers = "localhost:9092"
+	}
+
+	eventPublisher := events.NewKafkaPublisher(
+		strings.Split(kafkaBrokers, ","),
+		"feature_flag_evaluations",
+	)
+	defer eventPublisher.Close()
+
 	r := chi.NewRouter()
 
 	postgresStore := store.NewPostgresFeatureFlagStore(database)
 	cachedStore := store.NewCachedFeatureFlagStore(postgresStore, redisClient, 5*time.Minute)
-	flagHandler := handlers.NewFeatureFlagHandler(cachedStore)
+	flagHandler := handlers.NewFeatureFlagHandler(cachedStore, eventPublisher)
 
 	r.Get("/health", handlers.HealthCheck)
 	r.Post("/evaluate", flagHandler.EvaluateFlag)
