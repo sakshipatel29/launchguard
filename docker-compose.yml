@@ -10,6 +10,7 @@ services:
       DATABASE_URL: postgres://launchguard:launchguard@postgres:5432/launchguard?sslmode=disable
       REDIS_ADDR: redis:6379
       KAFKA_BROKERS: kafka:9092
+      JWT_SECRET: launchguard-local-jwt-secret
     depends_on:
       - postgres
       - redis

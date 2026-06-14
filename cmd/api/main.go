@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/sakshipatel29/launchguard/internal/auth"
 	"github.com/sakshipatel29/launchguard/internal/cache"
 	"github.com/sakshipatel29/launchguard/internal/db"
 	"github.com/sakshipatel29/launchguard/internal/events"
@@ -54,14 +55,20 @@ func main() {
 	flagHandler := handlers.NewFeatureFlagHandler(cachedStore, eventPublisher)
 
 	r.Get("/health", handlers.HealthCheck)
-	r.Post("/evaluate", flagHandler.EvaluateFlag)
+	r.Post("/login", handlers.Login)
 
-	r.Route("/flags", func(r chi.Router) {
-		r.Post("/", flagHandler.CreateFlag)
-		r.Get("/", flagHandler.ListFlags)
-		r.Get("/{id}", flagHandler.GetFlag)
-		r.Put("/{id}", flagHandler.UpdateFlag)
-		r.Delete("/{id}", flagHandler.DeleteFlag)
+	r.Group(func(r chi.Router) {
+		r.Use(auth.Middleware)
+
+		r.Post("/evaluate", flagHandler.EvaluateFlag)
+
+		r.Route("/flags", func(r chi.Router) {
+			r.Post("/", flagHandler.CreateFlag)
+			r.Get("/", flagHandler.ListFlags)
+			r.Get("/{id}", flagHandler.GetFlag)
+			r.Put("/{id}", flagHandler.UpdateFlag)
+			r.Delete("/{id}", flagHandler.DeleteFlag)
+		})
 	})
 
 	log.Println("LaunchGuard API running on port 8080")
