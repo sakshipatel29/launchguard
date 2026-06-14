@@ -114,3 +114,16 @@ func (s *FeatureFlagStore) Delete(id string) error {
 
 	return nil
 }
+
+func (s *FeatureFlagStore) GetByKeyAndEnvironment(key string, environment string) (models.FeatureFlag, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	for _, flag := range s.flags {
+		if flag.Key == key && flag.Environment == environment {
+			return flag, nil
+		}
+	}
+
+	return models.FeatureFlag{}, ErrFlagNotFound
+}

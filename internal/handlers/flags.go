@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/sakshipatel29/launchguard/internal/evaluator"
 	"github.com/sakshipatel29/launchguard/internal/models"
 	"github.com/sakshipatel29/launchguard/internal/store"
 )
@@ -126,6 +127,45 @@ func (h *FeatureFlagHandler) DeleteFlag(w http.ResponseWriter, r *http.Request) 
 	writeJSON(w, http.StatusOK, map[string]string{
 		"message": "feature flag deleted successfully",
 	})
+}
+
+func (h *FeatureFlagHandler) EvaluateFlag(w http.ResponseWriter, r *http.Request) {
+	var req models.EvaluateFlagRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if req.FlagKey == "" || req.UserID == "" || req.Environment == "" {
+		writeError(w, http.StatusBadRequest, "flag_key, user_id, and environment are required")
+		return
+	}
+
+	flag, err := h.store.GetByKeyAndEnvironment(req.FlagKey, req.Environment)
+	if err != nil {
+		if errors.Is(err, store.ErrFlagNotFound) {
+			writeError(w, http.StatusNotFound, "feature flag not found")
+			return
+		}
+
+		writeError(w, http.StatusInternalServerError, "failed to evaluate feature flag")
+		return
+	}
+
+	result := evaluator.Evaluate(flag, req.UserID)
+
+	response := models.EvaluateFlagResponse{
+		FlagKey:           flag.Key,
+		UserID:            req.UserID,
+		Environment:       flag.Environment,
+		Enabled:           result.Enabled,
+		RolloutPercentage: flag.RolloutPercentage,
+		Bucket:            result.Bucket,
+		Reason:            result.Reason,
+	}
+
+	writeJSON(w, http.StatusOK, response)
 }
 
 func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) {

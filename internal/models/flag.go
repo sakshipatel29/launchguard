@@ -30,3 +30,19 @@ type UpdateFeatureFlagRequest struct {
 	RolloutPercentage int    `json:"rollout_percentage"`
 	Environment       string `json:"environment"`
 }
+
+type EvaluateFlagRequest struct {
+	FlagKey     string `json:"flag_key"`
+	UserID      string `json:"user_id"`
+	Environment string `json:"environment"`
+}
+
+type EvaluateFlagResponse struct {
+	FlagKey           string `json:"flag_key"`
+	UserID            string `json:"user_id"`
+	Environment       string `json:"environment"`
+	Enabled           bool   `json:"enabled"`
+	RolloutPercentage int    `json:"rollout_percentage"`
+	Bucket            int    `json:"bucket"`
+	Reason            string `json:"reason"`
+}

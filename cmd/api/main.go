@@ -17,6 +17,7 @@ func main() {
 	flagHandler := handlers.NewFeatureFlagHandler(flagStore)
 
 	r.Get("/health", handlers.HealthCheck)
+	r.Post("/evaluate", flagHandler.EvaluateFlag)
 
 	r.Route("/flags", func(r chi.Router) {
 		r.Post("/", flagHandler.CreateFlag)
