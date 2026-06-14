@@ -511,15 +511,13 @@ launchguard
 
 ## Future Improvements
 
-* Add JWT authentication
-* Add role-based access control
-* Add audit log API
-* Add React dashboard for managing flags
-* Add OpenTelemetry distributed tracing
-* Add Prometheus metrics
-* Add Grafana dashboard
-* Add automated rollback rules based on error rate and latency
-* Add Kubernetes deployment manifests
-* Add SDKs for Go and Python applications
-* Add support for multi-variant experiments
-* Add organization and project-level flag grouping
+- Add Prometheus metrics for API latency, request counts, cache hits, and feature evaluation volume
+- Add Grafana dashboards for rollout analytics and system health monitoring
+- Add OpenTelemetry tracing across API, Redis, PostgreSQL, and Kafka workflows
+- Add automated rollback rules based on error rate and latency thresholds
+- Add Kubernetes deployment manifests
+- Add Go/Python SDKs for application integration
+- Add React dashboard for managing feature flags
+- Add audit logs for flag changes and user actions
+- Add role-based access control for admin and developer users
+- Add support for multi-variant experiments and A/B testing
