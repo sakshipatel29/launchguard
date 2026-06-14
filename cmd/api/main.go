@@ -1,17 +1,22 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/sakshipatel29/launchguard/internal/cache"
 	"github.com/sakshipatel29/launchguard/internal/db"
 	"github.com/sakshipatel29/launchguard/internal/handlers"
 	"github.com/sakshipatel29/launchguard/internal/store"
 )
 
 func main() {
+	ctx := context.Background()
+
 	database, err := db.ConnectPostgres()
 	if err != nil {
 		log.Fatal("failed to connect to PostgreSQL:", err)
@@ -22,10 +27,17 @@ func main() {
 		log.Fatal("failed to run database migrations:", err)
 	}
 
+	redisClient, err := cache.ConnectRedis(ctx)
+	if err != nil {
+		log.Fatal("failed to connect to Redis:", err)
+	}
+	defer redisClient.Close()
+
 	r := chi.NewRouter()
 
-	flagStore := store.NewPostgresFeatureFlagStore(database)
-	flagHandler := handlers.NewFeatureFlagHandler(flagStore)
+	postgresStore := store.NewPostgresFeatureFlagStore(database)
+	cachedStore := store.NewCachedFeatureFlagStore(postgresStore, redisClient, 5*time.Minute)
+	flagHandler := handlers.NewFeatureFlagHandler(cachedStore)
 
 	r.Get("/health", handlers.HealthCheck)
 	r.Post("/evaluate", flagHandler.EvaluateFlag)
