@@ -264,6 +264,69 @@ Example event:
 
 These events can be used for analytics, audit trails, experimentation dashboards, or automated rollback workflows.
 
+## Authentication
+
+LaunchGuard uses JWT-based authentication to protect feature flag management and evaluation APIs.
+
+Public endpoints:
+
+```http
+GET /health
+POST /login
+```
+
+Protected endpoints:
+
+```http
+POST   /flags/
+GET    /flags/
+GET    /flags/{id}
+PUT    /flags/{id}
+DELETE /flags/{id}
+POST   /evaluate
+```
+
+### Login
+
+```http
+POST /login
+```
+
+Example request:
+
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+Example response:
+
+```json
+{
+  "token": "eyJ..."
+}
+```
+
+### Store JWT Token in Terminal
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8080/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}' | python3 -c "import sys, json; print(json.load(sys.stdin)[\"token\"])")
+```
+
+### Use JWT Token
+
+Use the token with protected APIs:
+
+```bash
+curl http://localhost:8080/flags/ \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+
 ## Local Development Setup
 
 ### Prerequisites
