@@ -13,10 +13,10 @@ import (
 )
 
 type FeatureFlagHandler struct {
-	store *store.FeatureFlagStore
+	store store.FeatureFlagStore
 }
 
-func NewFeatureFlagHandler(flagStore *store.FeatureFlagStore) *FeatureFlagHandler {
+func NewFeatureFlagHandler(flagStore store.FeatureFlagStore) *FeatureFlagHandler {
 	return &FeatureFlagHandler{
 		store: flagStore,
 	}
@@ -55,7 +55,12 @@ func (h *FeatureFlagHandler) CreateFlag(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *FeatureFlagHandler) ListFlags(w http.ResponseWriter, r *http.Request) {
-	flags := h.store.List()
+	flags, err := h.store.List()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to list feature flags")
+		return
+	}
+
 	writeJSON(w, http.StatusOK, flags)
 }
 

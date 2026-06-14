@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: launchguard-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: launchguard
+      POSTGRES_PASSWORD: launchguard
+      POSTGRES_DB: launchguard
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
